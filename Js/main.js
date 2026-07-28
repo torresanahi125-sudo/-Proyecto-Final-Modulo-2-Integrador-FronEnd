@@ -65,3 +65,47 @@ const modalCloseBtn = document.getElementById('modal-close');
 
 // Captura el contenedor interno vacío donde JavaScript inyectará la biografía y estadísticas del héroe
 const modalBody = document.getElementById('modal-body');
+
+// ==========================================
+// PETICIÓN HTTP ASÍNCRONA (FETCH API)
+// ==========================================
+
+/**
+ * Se conecta de forma asíncrona al endpoint remoto y almacena en memoria la base de datos JSON
+ */
+async function fetchHeroesFromNetwork() {
+  // Dirección URL del repositorio de Akabab que centraliza la base de datos sin trabas de CORS
+  const API_URL = "https://akabab.github.io/superhero-api/api/all.json";
+  
+  try {
+    // Imprime en consola el inicio del intento de conexión con el servidor
+    console.log("[HTTP GET] Fetching universe records from API server...");
+    
+    // Ejecuta la petición de red asíncrona suspendiendo la ejecución hasta recibir la cabecera de respuesta
+    const response = await fetch(API_URL);
+    
+    // Control de flujo: Si el estado de la respuesta no es exitoso, interrumpe el bloque arrojando un error
+    if (!response.ok) throw new Error("Server HTTP response status error: " + response.status);
+    
+    // Procesa el flujo de datos transformando el cuerpo binario de la respuesta en un array de objetos legibles por JavaScript
+    allSuperheroes = await response.json();
+    
+    // Clona los datos descargados en el set de filtrado secundario para la renderización inicial del viewport
+    filteredHeroes = [...allSuperheroes];
+    
+    // Registra en la consola el éxito de la operación junto con el tamaño de la base de datos obtenida
+    console.log("[ SUCCESS] Downloaded " + allSuperheroes.length + " superheroes from network.");
+    
+    // Gatilla la actualización completa de la interfaz gráfica (Filtros, paginado y dibujo de tarjetas)
+    updateUserInterface();
+    
+  } catch (error) {
+    // Captura cualquier falla crítica ocurrida en el proceso 
+    console.error("[CRITICAL NETWORK ERROR] Fetch transaction aborted:", error);
+    
+    // Si el contenedor visual existe en el DOM, inyecta un mensaje de alerta amigable para el usuario
+    if (heroesGrid) {
+      heroesGrid.innerHTML = '<p class="no-results"> Connection timeout. Failed to synchronize remote data.</p>';
+    }
+  }
+}
