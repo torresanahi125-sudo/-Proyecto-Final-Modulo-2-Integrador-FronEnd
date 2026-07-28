@@ -1,0 +1,164 @@
+
+// ==========================================
+// VARIABLES LOCALES DEL COMPONENTE MODAL
+// ==========================================
+
+$modal-overlay: rgba(0, 0, 0, 0.8); // Fondo oscuro translúcido de la capa externa
+$modal-bg: #ffffff;                 // Color de fondo de la tarjeta del modal
+$modal-text-color: #333333;         // Tono principal para los textos biográficos
+$accent-color: #e62429;             // Rojo temático institucional estilo cómic
+
+// ==========================================
+// ESTRUCTURA PRINCIPAL DEL MODAL 
+
+.modal {
+  display: none; // Inicialmente oculto. Se activa con "display: flex" desde el main.js
+  position: fixed; // Se posiciona de forma absoluta respecto a la ventana del navegador
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: $modal-overlay; // Aplica la variable del fondo oscuro
+  z-index: 1000; // Se antepone sobre cualquier otra capa o tarjeta de la aplicación
+  justify-content: center; // Centra el contenedor interno de forma horizontal
+  align-items: center;     // Centra el contenedor interno de forma vertical
+  padding: 20px;
+  box-sizing: border-box; 
+
+  // Contenedor físico blanco que encierra la información del personaje
+  &__content {
+    background-color: $modal-bg;
+    border-radius: 12px; // Bordes suavizados 
+    width: 100%;
+    max-width: 750px;
+    
+    //  Impide que el modal sobrepase la altura del dispositivo
+    max-height: 90vh; 
+    position: relative; // Permite posicionar de forma absoluta el botón de cierre interno
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); // Sombra pronunciada para dar efecto de elevación
+    animation: fadeIn 0.3s ease-in-out; // Transición suave al abrirse
+    
+    //  Activa el scroll vertical interno si los datos exceden las dimensiones
+    overflow-y: auto; 
+    padding: 30px;
+    box-sizing: border-box;
+  }
+
+  // Botón con el ícono de cruz (X) para cerrar la ventana emergente
+  &__close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 2rem;
+    background: none; // Elimina los estilos nativos de los botones HTML
+    border: none;
+    color: #666666;
+    cursor: pointer; // Transforma el cursor en mano al posicionarse encima
+    transition: color 0.2s; // Suaviza el cambio de color en el estado hover
+
+    
+    &:hover {
+      color: $accent-color; // Cambia al rojo temático
+    }
+  }
+
+  // Distribución del contenido interno 
+  &__layout {
+    display: flex;
+    flex-direction: column; // Por defecto los elementos se apilan verticalmente en celulares
+    gap: 25px; // Separación uniforme entre la imagen y los textos
+    align-items: center;
+
+    // Regla  para pantallas medianas o grandes 
+    @media (min-width: 600px) {
+      flex-direction: row; // Dispone la imagen a la izquierda y los datos a la derecha
+      align-items: flex-start; // Alinea los elementos en el tope superior del contenedor
+    }
+  }
+
+  // Bloque que envuelve a la imagen de previsualización
+  &__media {
+    flex-shrink: 0; // Impide que la imagen se deforme o achique al perder espacio
+  }
+
+  // Imagen mediana del superhéroe
+  &__image {
+    width: 100%;
+    max-width: 220px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  // Bloque contenedor de las descripciones textuales
+  &__details {
+    flex: 1; 
+    color: $modal-text-color;
+    font-family: sans-serif;
+  }
+
+  // Título principal con el nombre del superhéroe
+  &__hero-title {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: $accent-color;
+    font-size: 2rem;
+    text-transform: uppercase; // Fuerza las letras a mayúsculas estilo cabecera de cómic
+    letter-spacing: 1px;
+  }
+
+  // Subtítulos de secciones secundarias (Biografía y Estadísticas)
+  &__subtitle {
+    border-bottom: 2px solid #eeeeee; // Línea sutil divisoria inferior
+    padding-bottom: 6px;
+    margin-top: 20px;
+    margin-bottom: 12px;
+    font-size: 1.25rem;
+    color: #111111;
+  }
+
+  // Párrafos de propiedades individuales (Nombre real, Editorial, etc.)
+  &__text {
+    margin: 8px 0;
+    font-size: 0.95rem;
+    line-height: 1.4; // Aumenta el interlineado para mejorar la legibilidad de la lectura
+
+    // Estilo para las etiquetas de los campos resaltados
+    strong {
+      color: #000000;
+    }
+  }
+
+  // Grilla interna adaptativa para agrupar las estadísticas numéricas de poder
+  &__stats-list {
+    list-style: none; // Remueve los puntos de lista por defecto
+    padding: 0;
+    margin: 0;
+    display: grid;
+    // Crea columnas dinámicas automáticas con un ancho mínimo de 130px cada una
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
+    gap: 10px;
+  }
+
+  // Ítems individuales de la lista de estadísticas (Inteligencia, Fuerza, etc.)
+  &__stat-item {
+    background-color: #f5f5f5; // Fondo gris suave que resalta el bloque
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    border-left: 3px solid $accent-color; // Detalle decorativo lateral con el color temático
+  }
+}
+
+// ==========================================
+// ANIMACIÓN DE TRANSICIÓN (KEYFRAMES)
+// ==========================================
+@keyframes fadeIn {
+  from {
+    opacity: 0; // Inicia completamente invisible
+    transform: translateY(-20px); // Inicia desplazado ligeramente hacia arriba
+  }
+  to {
+    opacity: 1; // Termina 100% opaco
+    transform: translateY(0); // Regresa a su posición original plana
+  }
+}

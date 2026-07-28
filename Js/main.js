@@ -109,3 +109,127 @@ async function fetchHeroesFromNetwork() {
     }
   }
 }
+// ==========================================
+// PROCESAMIENTO DE DATOS (FILTROS, ORDENACIÓN Y PAGINACIÓN)
+// ==========================================
+
+/**
+ * Función principal que coordina los filtros cruzados, la ordenación de elementos
+ * y calcula los segmentos de memoria para actualizar la vista de la aplicación.
+ */
+function updateUserInterface() {
+  // Captura y normaliza el texto de búsqueda (quita espacios extras y pasa todo a minúsculas)
+  const textQuery = searchInput ? searchInput.value.toLowerCase().trim() : "";
+  // Captura el valor del filtro de editoriales; por defecto usa "all" si el nodo no existe
+  const selectedPublisher = publisherFilter ? publisherFilter.value : "all";
+  // Captura el criterio de ordenamiento activo en el menú desplegable
+  const selectedSorting = sortSelect ? sortSelect.value : "asc";
+
+  // 1. Lógica de Filtros Cruzados (Búsqueda por cadena de texto AND filtro por Editorial)
+  filteredHeroes = allSuperheroes.filter(hero => {
+    // Control de flujo: Si el registro viene vacío o corrupto, lo descarta del array final
+    if (!hero || !hero.name) return false;
+    
+    // Evalúa si el nombre del personaje contiene el texto tipeado por el usuario
+    const matchesName = hero.name.toLowerCase().includes(textQuery);
+    // Obtiene la editorial de forma segura. Si el campo no existe, asigna "Unknown"
+    const heroPublisher = hero.biography && hero.biography.publisher ? hero.biography.publisher : "Unknown";
+    // Evalúa si la editorial coincide con la elegida o si el usuario seleccionó ver todas
+    const matchesPublisher = (selectedPublisher === "all" || heroPublisher === selectedPublisher);
+    
+    // Retorna verdadero únicamente si el superhéroe satisface de forma simultánea ambos criterios
+    return matchesName && matchesPublisher;
+  });
+
+  // 2. Proceso de Ordenamiento Alfabético del set filtrado
+  if (selectedSorting === "asc") {
+    // Organiza el array de la A a la Z contemplando caracteres especiales de forma correcta
+    filteredHeroes.sort((a, b) => a.name.localeCompare(b.name));
+  } else if (selectedSorting === "desc") {
+    // Organiza el array de la Z a la A invirtiendo el orden de los elementos
+    filteredHeroes.sort((a, b) => b.name.localeCompare(a.name));
+  }
+
+  // Cálculos matemáticos esenciales para establecer los límites lógicos del paginado
+  const totalHeroes = filteredHeroes.length;
+  // Divide por 20 y redondea hacia arriba. Si el resultado es cero, asigna 1 por seguridad
+  const totalPages = Math.ceil(totalHeroes / limitPerPage) || 1;
+
+  // Cláusulas de guarda para evitar que la página activa quede fuera del rango de páginas reales
+  if (currentPage > totalPages) currentPage = totalPages;
+  if (currentPage < 1) currentPage = 1;
+
+  // Actualiza el contador dinámico en la pantalla con el total de coincidencias halladas
+  if (totalResultsSpan) {
+    totalResultsSpan.textContent = totalHeroes;
+  }
+
+  // 3. Segmentación del Array (Slicing) según la página que se desea visualizar
+  // Determina el índice de inicio en base a la página actual (Ej: Página 2 arranca en index 20)
+  const startIndex = (currentPage - 1) * limitPerPage;
+  // Determina el límite superior excluyente para hacer el recorte de elementos
+  const endIndex = startIndex + limitPerPage;
+  // Extrae la porción exacta de hasta 20 superhéroes correspondientes a esta página
+  const currentPageSegment = filteredHeroes.slice(startIndex, endIndex);
+
+  // Ejecuta la función que inyecta las tarjetas físicas en la grilla visual de la aplicación
+  renderHeroCards(currentPageSegment);
+  // Actualiza los estados de habilitación e indicadores de texto en la barra de navegación
+  renderPaginationControls(totalPages);
+}
+
+/**
+ * Crea elementos de forma dinámica en el DOM e inyecta las tarjetas dentro de la grilla de trabajo
+ */
+function renderHeroCards(heroesList) {
+  if (!heroesGrid) return;
+  // Vacía por completo el contenedor principal antes de renderizar el nuevo lote de tarjetas
+  heroesGrid.innerHTML = "";
+
+  // Si los filtros aplicados dejan el array en cero, despliega un aviso amigable en la pantalla
+  if (heroesList.length === 0) {
+    heroesGrid.innerHTML = '<p class="no-results"> No superhero matches found for this cross filter criteria.</p>';
+    return;
+  }
+
+  // Itera secuencialmente sobre el bloque de 20 héroes para maquetar su interfaz correspondiente
+  heroesList.forEach(hero => {
+    // Crea una etiqueta de artículo para respetar los estándares de HTML semántico
+    const cardElement = document.createElement("article");
+    // Agrega la clase base siguiendo la metodología de nombres BEM (.hero-card)
+    cardElement.classList.add("hero-card");
+
+    // Asignación segura de la imagen de portada y de la editorial resolviendo posibles campos nulos
+    const imgUrl = hero.images && hero.images.sm ? hero.images.sm : "https://placeholder.com";
+    const publisher = hero.biography && hero.biography.publisher ? hero.biography.publisher : "Unknown";
+
+    // Inserta los elementos internos estructurando el diseño con clases BEM para estilar en SASS
+    // Se añade el atributo 'loading="lazy"' para optimizar la transferencia de datos y la velocidad
+    cardElement.innerHTML = `
+      <img class="hero-card__image" src="${imgUrl}" alt="${hero.name}" loading="lazy">
+      <div class="hero-card__content">
+        <h2 class="hero-card__title">${hero.name}</h2>
+        <p class="hero-card__publisher">${publisher}</p>
+      </div>
+    `;
+
+    // Escuchador de eventos: Al hacer click sobre el artículo, dispara el modal pasando el objeto actual
+    cardElement.addEventListener('click', () => openDetailModal(hero));
+    // Agrega el nodo secundario completado al interior de la grilla principal
+    heroesGrid.appendChild(cardElement);
+  });
+}
+
+/**
+ * Actualiza dinámicamente las cadenas de texto informativas y modifica el estado de bloqueo de los botones
+ */
+function renderPaginationControls(totalPages) {
+  // Actualiza la visualización de la posición del usuario (Ej: "Page 1 of 28")
+  if (pageInfo) pageInfo.textContent = "Page " + currentPage + " of " + totalPages;
+
+  // Lógica de deshabilitación de controles para resguardar la navegación (Criterio del TP)
+  if (btnFirst) btnFirst.disabled = (currentPage === 1); // Bloquea "Primero" si ya está en la página 1
+  if (btnPrev) btnPrev.disabled = (currentPage === 1);   // Bloquea "Anterior" si ya está en la página 1
+  if (btnNext) btnNext.disabled = (currentPage === totalPages); // Bloquea "Siguiente" si llegó al final
+  if (btnLast) btnLast.disabled = (currentPage === totalPages); // Bloquea "Último" si llegó al final
+}

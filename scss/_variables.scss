@@ -1,0 +1,51 @@
+// ==========================================
+// PALETA CROMÁTICA PREMIUM Y TIPOGRAFÍAS (ESTILO CÓMIC)
+// ==========================================
+
+// Color de acento principal: Rojo carmesí característico de la estética de Avengers
+$color-primary: #e62429;      
+
+// Tonalidad del rojo principal oscurecido para las transiciones hover de los botones
+$color-primary-hover: #b81418;
+
+// Fondo general de la aplicación: Negro profundo estilo espacio de cómics
+$color-dark-bg: #0c0c0c;      
+
+// Color de fondo para los contenedores individuales y las tarjetas de los héroes
+$color-card-bg: #151515;      
+
+// Variación grisácea de la tarjeta que se activa al posicionar el cursor sobre ella
+$color-card-hover: #1f1f1f;
+
+// Color blanco puro para contrastes extremos o textos destacados
+$color-light: #ffffff;      
+
+// Tono gris claro para el texto principal que evita la fatiga visual del blanco puro
+$color-text-main: #f5f5f5;   
+
+// Color gris apagado destinado a leyendas secundarias o datos de menor relevancia
+$color-text-muted: #999999;   
+
+// Color de línea sutil para los bordes divisores y contornos de elementos gráficos
+$color-border: #2a2a2a;
+
+// Tipografía de impacto pesado y trazo grueso ideal para los títulos principales
+$font-title: 'Impact', 'Arial Black', sans-serif; 
+
+// Fuente tipográfica limpia y geométrica optimizada para bloques largos de lectura
+$font-body: 'Segoe UI', Roboto, sans-serif;
+
+// Radio de curvatura pronunciado para redondear las esquinas de contenedores y modales
+$border-radius-lg: 12px;
+
+// Radio de curvatura suavizado para elementos compactos como botones o inputs
+$border-radius-sm: 6px;
+
+// Sombra paralela densa para otorgar un efecto de elevación tridimensional a las tarjetas
+$shadow-premium: 0 8px 25px rgba(0, 0, 0, 0.5);
+
+// Efecto interactivo de iluminación: genera un leve resplandor rojo al hacer hover
+$shadow-hover: 0 12px 35px rgba(230, 36, 41, 0.25); 
+
+// Curva de interpolación de tiempo para lograr animaciones fluidas y orgánicas
+$transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
