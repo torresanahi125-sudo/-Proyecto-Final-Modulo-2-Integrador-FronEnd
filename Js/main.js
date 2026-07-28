@@ -233,3 +233,155 @@ function renderPaginationControls(totalPages) {
   if (btnNext) btnNext.disabled = (currentPage === totalPages); // Bloquea "Siguiente" si llegó al final
   if (btnLast) btnLast.disabled = (currentPage === totalPages); // Bloquea "Último" si llegó al final
 }
+// ==========================================
+// INTERACCIÓN Y RENDERIZADO ASÍNCRONO DEL MODAL
+// ==========================================
+
+/**
+ * Se encarga de abrir la ventana modal e inyectar dinámicamente la información detallada del héroe seleccionado
+ * @param {Object} hero - El objeto con los datos completos del superhéroe
+ */
+function openDetailModal(hero) {
+  if (!heroModal || !modalBody) return;
+
+  // Mapeo seguro de todas las estructuras internas requeridas por la consigna
+  const stats = hero.powerstats || {};
+  const appearance = hero.appearance || {};
+  const biography = hero.biography || {};
+  const connections = hero.connections || {};
+
+  
+  modalBody.innerHTML = `
+    <div class="modal__layout">
+      <div class="modal__media">
+        <img class="modal__image" src="${hero.images.md}" alt="${hero.name}">
+      </div>
+      <div class="modal__details">
+        <h2 class="modal__hero-title">${hero.name}</h2>
+        <p class="modal__text"><strong>Nombre Real:</strong> ${biography.fullName || "Desconocido"}</p>
+        
+        <!-- REQUISITO: Editorial (Marvel / DC / etc.) -->
+        <p class="modal__text"><strong>Editorial:</strong> ${biography.publisher || "Desconocida"}</p>
+        
+        <!-- REQUISITO: Altura y peso -->
+        <p class="modal__text"><strong>Altura:</strong> ${appearance.height ? appearance.height.join(' / ') : "N/A"} | <strong>Peso:</strong> ${appearance.weight ? appearance.weight.join(' / ') : "N/A"}</p>
+        
+        <!-- REQUISITO: Descripción / Biografía (alias, lugar de nacimiento, ocupación) -->
+        <h3 class="modal__subtitle">Biografía</h3>
+        <p class="modal__text"><strong>Alias:</strong> ${biography.aliases ? biography.aliases.join(', ') : "Ninguno"}</p>
+        <p class="modal__text"><strong>Lugar de Nacimiento:</strong> ${biography.placeOfBirth || "Desconocido"}</p>
+        <p class="modal__text"><strong>Ocupación:</strong> ${biography.occupation || "Desconocida"}</p>
+        
+        <!-- REQUISITO: Conexiones o afiliaciones -->
+        <p class="modal__text"><strong>Conexiones:</strong> ${connections.groupAffiliation || "Ninguna"}</p>
+
+        <!-- REQUISITO: Estadísticas de poder (fuerza, velocidad, inteligencia, combate, etc.) -->
+        <h3 class="modal__subtitle">Estadísticas de Poder</h3>
+        <ul class="modal__stats-list">
+          <li class="modal__stat-item">🧠 Inteligencia: <strong>${stats.intelligence || 0}</strong></li>
+          <li class="modal__stat-item">💪 Fuerza: <strong>${stats.strength || 0}</strong></li>
+          <li class="modal__stat-item">⚡ Velocidad: <strong>${stats.speed || 0}</strong></li>
+          <li class="modal__stat-item">🛡️ Durabilidad: <strong>${stats.durability || 0}</strong></li>
+          <li class="modal__stat-item">🔥 Poder: <strong>${stats.power || 0}</strong></li>
+          <li class="modal__stat-item">⚔️ Combate: <strong>${stats.combat || 0}</strong></li>
+        </ul>
+      </div>
+    </div>
+  `;
+
+  heroModal.style.display = "flex";
+}
+
+
+// Escuchador de eventos asignado al botón de cierre 
+if (modalCloseBtn) {
+  modalCloseBtn.addEventListener('click', () => {
+    // Al hacer click, oculta la ventana flotante modificando su propiedad display
+    heroModal.style.display = "none";
+  });
+}
+
+
+window.addEventListener('click', (e) => {
+  // Condición de seguridad: Evalúa si el elemento exacto que recibió el click fue el fondo oscuro difuminado
+  if (e.target === heroModal) {
+    // Oculta el modal impidiendo que los clicks internos en el contenido cierren la ventana por error
+    heroModal.style.display = "none";
+  }
+});
+
+
+// ==========================================
+// REGISTRO DE ESCUCHADORES DE EVENTOS 
+// ==========================================
+
+// Escuchador para la barra de búsqueda: Se ejecuta cada vez que el usuario escribe una letra
+if (searchInput) searchInput.addEventListener('input', () => { 
+  // Resetea a la primera página para mostrar los nuevos resultados desde el inicio
+  currentPage = 1; 
+  // Re-renderiza toda la interfaz gráfica con el filtro de texto aplicado
+  updateUserInterface(); 
+});
+
+// Escuchador para el filtro de editoriales: Se activa al seleccionar una opción diferente del menú desplegable
+if (publisherFilter) publisherFilter.addEventListener('change', () => { 
+  // Regresa a la página inicial del nuevo set de datos filtrados
+  currentPage = 1; 
+  // Actualiza la grilla y recalcula el número total de páginas correspondientes
+  updateUserInterface(); 
+});
+
+// Escuchador para el selector de ordenamiento: Se dispara al cambiar el criterio (A-Z o Z-A)
+if (sortSelect) sortSelect.addEventListener('change', () => { 
+  // Resetea el paginado a la página 1 para que el orden comience desde el principio
+  currentPage = 1; 
+  // Ejecuta la ordenación del array y redibuja las tarjetas en pantalla
+  updateUserInterface(); 
+});
+
+//  Permite el salto directo al inicio de la lista
+if (btnFirst) btnFirst.addEventListener('click', () => { 
+  // Fuerza el estado global a la página número 1
+  currentPage = 1; 
+  // Actualiza  la aplicación
+  updateUserInterface(); 
+});
+
+//  Permite el salto directo al final de los resultados
+if (btnLast) btnLast.addEventListener('click', () => {
+  // Determina matemáticamente la última página dividiendo los héroes filtrados actuales por el límite de 20
+  // Usa el cortocircuito lógico  para resguardar la app asignando la página 1 si el cálculo da cero
+  currentPage = Math.ceil(filteredHeroes.length / limitPerPage) || 1;
+  // Sincroniza la visualización de la interfaz
+  updateUserInterface();
+});
+
+//  Controla el retroceso de páginas de forma individual
+if (btnPrev) btnPrev.addEventListener('click', () => { 
+  //  Solo resta una unidad si la página actual es estrictamente mayor a 1
+  if (currentPage > 1) { 
+    currentPage--; 
+    // Redibuja las tarjetas del segmento anterior en el DOM
+    updateUserInterface(); 
+  } 
+});
+
+// Controla el avance de páginas de forma de forma individual
+if (btnNext) btnNext.addEventListener('click', () => {
+  // Calcula el tope máximo de páginas según el filtro de búsqueda activo actualmente
+  const total = Math.ceil(filteredHeroes.length / limitPerPage) || 1;
+  //  Solo permite sumar una página si no se ha alcanzado dicho tope máximo
+  if (currentPage < total) { 
+    currentPage++; 
+    // Redibuja las tarjetas del segmento siguiente en el DOM
+    updateUserInterface(); 
+  }
+});
+
+// ==========================================
+// PUNTO DE ENTRADA E INICIALIZACIÓN
+// ==========================================
+
+// Dispara de forma inmediata la descarga asíncrona de los datos al momento de cargarse el archivo
+fetchHeroesFromNetwork();
+
